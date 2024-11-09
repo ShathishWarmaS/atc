@@ -95,3 +95,14 @@ resource "aws_route_table_association" "private_rt_assoc" {
   subnet_id      = aws_subnet.private_subnet[count.index].id
   route_table_id = aws_route_table.private_rt.id
 }
+# main.tf in the root directory
+
+module "bastion" {
+  source          = "./modules/bastion"
+  project_name    = var.project_name
+  vpc_id          = var.vpc_id
+  subnet_id       = var.public_subnet_id
+  ami_id          = var.ami_id
+  instance_type   = var.instance_type
+  allowed_ip      = var.allowed_ip
+}

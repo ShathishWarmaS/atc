@@ -27,3 +27,36 @@ variable "private_subnet_cidrs" {
   type        = list(string)
   default     = ["10.0.3.0/24", "10.0.4.0/24"]
 }
+
+#bastion
+# variables.tf in the root directory
+
+
+
+variable "vpc_id" {
+  description = "ID of the existing VPC for the bastion host"
+  type        = string
+}
+
+variable "public_subnet_id" {
+  description = "ID of the existing public subnet for the bastion host"
+  type        = string
+}
+
+variable "ami_id" {
+  description = "AMI ID for the bastion server"
+  type        = string
+  default     = "ami-005fc0f236362e99f"  # Provided AMI ID
+}
+
+variable "instance_type" {
+  description = "Instance type for the bastion server"
+  type        = string
+  default     = "t2.micro"
+}
+
+variable "allowed_ip" {
+  description = "CIDR block for allowed IP for SSH access"
+  type        = string
+  default     = "YOUR_IP/32"  # Replace with your actual public IP address
+}
