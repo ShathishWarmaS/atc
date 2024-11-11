@@ -1,0 +1,60 @@
+name: Build and Deploy to EKS
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  CLUSTER_NAME: ${{ secrets.CLUSTER_NAME }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      run: |
+        aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${{ secrets.ECR_REPO_FRONTEND }}
+        aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${{ secrets.ECR_REPO_BACKEND }}
+
+    - name: Build and Push Frontend Docker Image
+      run: |
+        docker build -t frontend:latest ./frontend
+        docker tag frontend:latest ${{ secrets.ECR_REPO_FRONTEND }}:latest
+        docker push ${{ secrets.ECR_REPO_FRONTEND }}:latest
+
+    - name: Build and Push Backend Docker Image
+      run: |
+        docker build -t backend:latest ./backend
+        docker tag backend:latest ${{ secrets.ECR_REPO_BACKEND }}:latest
+        docker push ${{ secrets.ECR_REPO_BACKEND }}:latest
+
+    - name: Update kubeconfig
+      run: |
+        aws eks update-kubeconfig --name $CLUSTER_NAME --region $AWS_REGION
+
+    - name: Deploy Frontend to EKS
+      run: |
+        sed -i 's|<frontend-image-url>|${{ secrets.ECR_REPO_FRONTEND }}:latest|g' k8s/frontend-deployment.yaml
+        kubectl apply -f k8s/frontend-deployment.yaml
+
+    - name: Deploy Backend to EKS
+      run: |
+        sed -i 's|<backend-image-url>|${{ secrets.ECR_REPO_BACKEND }}:latest|g' k8s/backend-deployment.yaml
+        kubectl apply -f k8s/backend-deployment.yaml
+
+    - name: Deploy Prometheus to EKS
+      run: |
+        kubectl apply -f k8s/prometheus-deployment.yaml

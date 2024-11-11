@@ -63,8 +63,10 @@ resource "aws_instance" "bastion" {
     rm -rf awscliv2.zip ./aws
 
     # Install kubectl
-    curl -fsSL -o /usr/local/bin/kubectl https://dl.k8s.io/release/$(curl -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl
-    chmod +x /usr/local/bin/kubectl
+    curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-archive-keyring.gpg
+    echo "deb [signed-by=/etc/apt/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+    sudo apt update
+    sudo apt install kubectl
 
     # Install jq for JSON parsing
     apt-get install -y jq
@@ -89,6 +91,22 @@ resource "aws_instance" "bastion" {
     helm version
     terraform -version
   EOF
+   # Transfer kubeconfig only after EKS is ready
+  provisioner "remote-exec" {
+    inline = [
+      "mkdir -p ~/.kube",
+      "echo '${var.kubeconfig_content}' > ~/.kube/config",
+      "chmod 600 ~/.kube/config"
+    ]
+
+    connection {
+      type        = "ssh"
+      host        = self.public_ip
+      user        = "ubuntu"
+      private_key = tls_private_key.bastion_key.private_key_pem
+      timeout     = "5m"
+    }
+  }
 
   tags = {
     Name = "${var.project_name}-bastion"

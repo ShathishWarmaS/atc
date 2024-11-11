@@ -28,3 +28,7 @@ variable "allowed_ip" {
   description = "CIDR block for allowed IP for SSH access"
   type        = string
 }
+variable "kubeconfig_content" {
+  description = "Content of the kubeconfig file for EKS access"
+  type        = string
+}

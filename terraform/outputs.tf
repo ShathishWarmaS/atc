@@ -26,3 +26,30 @@ output "bastion_ssh_key_path" {
   description = "The local path of the SSH private key for the bastion host"
   value       = module.bastion.bastion_ssh_key_path
 }
+
+
+output "kubeconfig_path" {
+  value       = local_file.kubeconfig.filename
+  description = "Path to the kubeconfig file for the EKS cluster"
+}
+# Root outputs.tf
+
+output "eks_cluster_name" {
+  description = "The name of the EKS cluster"
+  value       = module.eks_cluster.cluster_name
+}
+
+output "eks_cluster_endpoint" {
+  description = "The endpoint for the EKS cluster"
+  value       = data.aws_eks_cluster.cluster.endpoint
+}
+
+output "eks_cluster_ca_certificate" {
+  description = "The CA certificate data for the EKS cluster"
+  value       = data.aws_eks_cluster.cluster.certificate_authority[0].data
+}
+
+output "eks_oidc_url" {
+  description = "The OIDC issuer URL for the EKS cluster"
+  value       = data.aws_eks_cluster.cluster.identity[0].oidc[0].issuer
+}
