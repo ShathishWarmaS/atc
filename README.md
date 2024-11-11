@@ -118,8 +118,11 @@ GitHub Actions Workflow Steps
 	3.	Push to ECR: Push the images to ECR.
 	4.	Deploy to EKS: Update the Kubernetes manifests with the latest image tags and apply them to the EKS cluster.
 
-File Structure
 
+
+## File Structure
+
+```plaintext
 .
 ├── main.tf                    # Root Terraform configuration for VPC, EKS, etc.
 ├── variables.tf               # Variable definitions
